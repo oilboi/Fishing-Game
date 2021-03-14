@@ -4,3 +4,7 @@ ocean.png: https://opengameart.org/content/ocean-background (resized to 16:9)
 
 bobber: I made that in GIMP
 pole: I made that in GIMP
+
+track one: https://www.bensound.com/royalty-free-music/track/acoustic-breeze
+You are free to use this music in your multimedia project (online videos(YouTube,...), websites, animations, etc.) as long as you credit Bensound.com, For example: "Music: www.bensound.com" or "Royalty Free Music from Bensound"
+(this has been taken directly from the creator's website on attribution)
