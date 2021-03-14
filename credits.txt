@@ -20,3 +20,7 @@ underwater: https://opengameart.org/content/underwater-scene-loopable
 collect lure: https://freesound.org/people/swordofkings128/sounds/398034/
 
 bite: https://freesound.org/people/deleted_user_2104797/sounds/164592/
+
+fish fighting: https://freesound.org/people/brittmosel/sounds/529300/
+
+fish landed: https://freesound.org/people/petenice/sounds/9508/

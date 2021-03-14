@@ -34,16 +34,31 @@ castingCoolDown = 0
 levelMin = 600 --(close) - using direct pixel spacing of the display window, needs to be changed to fit multiple window sizes
 levelMax = 420 --(far)
 
+--whether casting or fighting
 underWater = false
+
+--fish variables
+fishScale = 3
+fishSizeX = 118
+fishSizeY = 29
+fishX = 0
+fishY = 0
+
+
+levelPanel1X = 0
+levelPanel2X = 1280
 
 
 function love.load()
     love.window.setMode(windowWidth, windowHeight)
     love.graphics.setDefaultFilter( "nearest", "nearest", 0 )
+    
     level = love.graphics.newImage("Ocean.png")
     pole = love.graphics.newImage("Pole.png")
     bobber = love.graphics.newImage("Bobber.png")
     pike = love.graphics.newImage("pike.png")
+    
+    underWaterLevel = love.graphics.newImage("underwater.png")
     
     castSound = love.audio.newSource("cast.mp3", "static")
     music = love.audio.newSource("music.mp3", "stream")
@@ -52,11 +67,13 @@ function love.load()
     collectLure = love.audio.newSource("collectLure.wav", "static")
     biteSound = love.audio.newSource("bite.wav", "static")
     
+    fishFightSound = love.audio.newSource("fishFight.wav", "static")
+    fishLanded = love.audio.newSource("fishLanded.wav", "static")
+    
     underWaterSounds = love.audio.newSource("underwater.wav", "stream")
     
     music:setVolume(0.5)
     music:play()
-    underWaterSounds:play()
 end
 
 function love.draw()
@@ -90,6 +107,23 @@ function love.draw()
         end
         love.graphics.setColor( 255, 255, 255, 255 )
       end
+      
+      
+    else
+    
+      love.graphics.draw(underWaterLevel,levelPanel1X,0,0,1,1) --draw level
+      love.graphics.draw(underWaterLevel,levelPanel2X,0,0,1,1) --draw level
+      
+      love.graphics.draw(pike,fishX,fishY - ((fishScale * fishSizeY) / 2),0,fishScale,fishScale)
+      
+      
+      love.graphics.setColor( 0, 0, 0, 255 )
+      love.graphics.line( fishX, fishY, windowWidth / 2, 0)
+      love.graphics.setColor( 255, 255, 255, 255 )
+      
+    love.graphics.setColor( 0, 0, 0, 255 )
+    love.graphics.print("Line: " .. line, 0, 50)
+    love.graphics.setColor( 255, 255, 255, 255 )
     
     end
     love.graphics.setColor( 0, 0, 0, 255 )
@@ -99,7 +133,10 @@ function love.draw()
 end
 
 
-biteTimer = 30
+biteTimer = 100
+fishFighting = true
+fishFightTimer = 100
+line = 3000
 
 function love.update()
   
@@ -117,11 +154,18 @@ function love.update()
       if drawback == 0 and castedOut then
         biteTimer = biteTimer - 0.5
         if biteTimer <= 0 then
-          biteTimer = 30
-          --if math.random() > 0.8 then
+          biteTimer = 100
+          if math.random() > 0.9 then
             underWater = true
             biteSound:play()
-          --end
+            music:stop()
+            underWaterSounds:play()
+            
+            fishX = (windowWidth / 2) - ((fishScale * fishSizeX) / 2)
+            fishY = (windowHeight / 2) - ((fishScale * fishSizeY) / 2)
+            
+            line = 3000
+          end
         end
       end
     
@@ -172,6 +216,61 @@ function love.update()
       
       if castingCoolDown > 0 then
         castingCoolDown = castingCoolDown - 0.1
+      end
+    else
+      
+      fishFightTimer = fishFightTimer - 1
+      if fishFightTimer <= 0 then
+        if math.random() > 0.79 then
+          fishFighting = true
+        else
+          fishFighting = false
+        end
+        fishFightTimer = 100
+      end
+      
+      if fishFighting then
+        
+        reelSound:stop()
+        
+        levelPanel1X = levelPanel1X + 1
+        levelPanel2X = levelPanel2X + 1
+        
+        if levelPanel1X > 1280 then
+          levelPanel1X = -1279
+        end
+        if levelPanel2X > 1280 then
+          levelPanel2X = -1279
+        end
+        
+        fishFightSound:play() 
+        
+        line = line + 1
+        
+      elseif love.keyboard.isDown("space") then
+        reelSound:play()
+        
+        levelPanel1X = levelPanel1X - 1
+        levelPanel2X = levelPanel2X - 1
+        
+        if levelPanel1X < -1280 then
+          levelPanel1X = 1279
+        end
+        if levelPanel2X < -1280 then
+          levelPanel2X = 1279
+        end
+        
+        line = line - 1
+        
+        if line <= 0 then
+          underWater = false
+          castingCoolDown = 50
+          castedOut = false
+          music:play()
+          fishLanded:play()
+        end
+      else
+        reelSound:stop()
       end
     end
 end
