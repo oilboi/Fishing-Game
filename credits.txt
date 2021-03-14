@@ -1,0 +1,6 @@
+credits:
+
+ocean.png: https://opengameart.org/content/ocean-background (resized to 16:9)
+
+bobber: I made that in GIMP
+pole: I made that in GIMP
