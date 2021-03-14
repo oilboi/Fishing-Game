@@ -63,6 +63,12 @@ function love.draw()
     
     if castedOut and drawback <= 0 then
       love.graphics.draw(bobber, bobberX,  bobberY, 0, 4,4)
+      
+      love.graphics.setColor( 0, 0, 0, 255 )
+      
+      love.graphics.line( polex - ((poleWidth * poleScale)/5) , windowHeight-380, bobberX+((bobberScale * bobberSize)/2), bobberY)
+      
+      love.graphics.setColor( 255, 255, 255, 255 )
     end
     
     -- this is flipped 180 because it is easier to work with that way (math.pi)
