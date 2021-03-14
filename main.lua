@@ -34,6 +34,8 @@ castingCoolDown = 0
 levelMin = 600 --(close) - using direct pixel spacing of the display window, needs to be changed to fit multiple window sizes
 levelMax = 420 --(far)
 
+underWater = false
+
 
 function love.load()
     love.window.setMode(windowWidth, windowHeight)
@@ -41,13 +43,19 @@ function love.load()
     level = love.graphics.newImage("Ocean.png")
     pole = love.graphics.newImage("Pole.png")
     bobber = love.graphics.newImage("Bobber.png")
+    pike = love.graphics.newImage("pike.png")
     
     castSound = love.audio.newSource("cast.mp3", "static")
     music = love.audio.newSource("music.mp3", "stream")
     
     reelSound = love.audio.newSource("reel.wav", "static")
+    collectLure = love.audio.newSource("collectLure.wav", "static")
     
+    underWaterSounds = love.audio.newSource("underwater.wav", "stream")
+    
+    music:setVolume(0.5)
     music:play()
+    underWaterSounds:play()
 end
 
 function love.draw()
@@ -131,10 +139,9 @@ function love.update()
       if bobberY > windowHeight - 50 then
         castedOut = false
         castingCoolDown = 15
+        collectLure:play()
       end
-      
         reelSound:play()
-      
     else
       reelSound:stop()
     end
