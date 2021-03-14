@@ -18,3 +18,5 @@ pike: https://opengameart.org/content/pike-fish
 underwater: https://opengameart.org/content/underwater-scene-loopable
 
 collect lure: https://freesound.org/people/swordofkings128/sounds/398034/
+
+bite: https://freesound.org/people/deleted_user_2104797/sounds/164592/

@@ -50,6 +50,7 @@ function love.load()
     
     reelSound = love.audio.newSource("reel.wav", "static")
     collectLure = love.audio.newSource("collectLure.wav", "static")
+    biteSound = love.audio.newSource("bite.wav", "static")
     
     underWaterSounds = love.audio.newSource("underwater.wav", "stream")
     
@@ -59,36 +60,38 @@ function love.load()
 end
 
 function love.draw()
-    love.graphics.draw(level,0,0,0,3.333,3.333) --draw level
-    
-    if castedOut and drawback <= 0 then
-      love.graphics.draw(bobber, bobberX,  bobberY, 0, 4,4)
+    if not underWater then
+      love.graphics.draw(level,0,0,0,3.333,3.333) --draw level
       
-      love.graphics.setColor( 0, 0, 0, 255 )
-      
-      love.graphics.line( polex - ((poleWidth * poleScale)/5) , windowHeight-380, bobberX+((bobberScale * bobberSize)/2), bobberY)
-      
-      love.graphics.setColor( 255, 255, 255, 255 )
-    end
-    
-    -- this is flipped 180 because it is easier to work with that way (math.pi)
-    if drawback <= 1 then
-      love.graphics.draw(pole, polex + ((poleWidth * poleScale)/2), windowHeight + (drawback * 50), (((drawback - 1) * math.pi) / 4) + (math.pi * 1.25) ,poleScale * (1 + (drawback*2)),poleScale *  (1 + (drawback*2))) 
-    end
-    
-    --shows the power meter of casting
-    if drawback > 0 then
-      --max height is 200 pixels
-      love.graphics.setColor( 255, 0, 0, 255 )
-      love.graphics.rectangle( "line", windowWidth - 30, windowHeight - 480 , 20, 220)
-      love.graphics.rectangle( "fill", windowWidth - 30, windowHeight - 260 - (drawback * 110), 20, drawback * 110 )
-      
-      for number,letter in pairs(letterTable) do
-          love.graphics.print(letter, windowWidth - 45, windowHeight - 430 + (number*20))
+      if castedOut and drawback <= 0 then
+        love.graphics.draw(bobber, bobberX,  bobberY, 0, 4,4)
+        
+        love.graphics.setColor( 0, 0, 0, 255 )
+        
+        love.graphics.line( polex - ((poleWidth * poleScale)/5) , windowHeight-380, bobberX+((bobberScale * bobberSize)/2), bobberY)
+        
+        love.graphics.setColor( 255, 255, 255, 255 )
       end
-      love.graphics.setColor( 255, 255, 255, 255 )
-    end
+      
+      -- this is flipped 180 because it is easier to work with that way (math.pi)
+      if drawback <= 1 then
+        love.graphics.draw(pole, polex + ((poleWidth * poleScale)/2), windowHeight + (drawback * 50), (((drawback - 1) * math.pi) / 4) + (math.pi * 1.25) ,poleScale * (1 + (drawback*2)),poleScale *  (1 + (drawback*2))) 
+      end
+      
+      --shows the power meter of casting
+      if drawback > 0 then
+        --max height is 200 pixels
+        love.graphics.setColor( 255, 0, 0, 255 )
+        love.graphics.rectangle( "line", windowWidth - 30, windowHeight - 480 , 20, 220)
+        love.graphics.rectangle( "fill", windowWidth - 30, windowHeight - 260 - (drawback * 110), 20, drawback * 110 )
+        
+        for number,letter in pairs(letterTable) do
+            love.graphics.print(letter, windowWidth - 45, windowHeight - 430 + (number*20))
+        end
+        love.graphics.setColor( 255, 255, 255, 255 )
+      end
     
+    end
     love.graphics.setColor( 0, 0, 0, 255 )
     love.graphics.print("Fishing 0.0", 0, 0)
     love.graphics.setColor( 255, 255, 255, 255 )
@@ -96,63 +99,79 @@ function love.draw()
 end
 
 
+biteTimer = 30
+
 function love.update()
   
-    --allow the player to move the pole around
-    if drawback == 0 then
-      if love.keyboard.isDown("left") and polex > 20 then
-        polex = polex - 2
-      elseif love.keyboard.isDown("right") and polex < windowWidth - 20 then
-        polex = polex + 2
-      end
-    end
-  
-    --this is the animation and power logic of drawing back the pole
-    if love.keyboard.isDown("space") and not castedOut and castingCoolDown <= 0 then
-      
-      if drawback < 2 then
-        drawback = drawback + 0.005
-      end
-      if drawback >= 2 then
-        up = false
-        drawback = 2
-      end
-      
-    elseif drawback > 0 and not love.keyboard.isDown("space") and castedOut == false then
-        castedOut = true
-        bobberX = ((polex + (windowWidth/2)) / 2) - ((bobberSize * bobberScale)/2) 
-        bobberY = ((drawback/2) * (levelMax - levelMin)) + levelMin
-        castSound:play()
-        
-    elseif drawback > 0 and castedOut then
-      
-        if drawback > 0 then
-          drawback = drawback - 0.025
+    if not underWater then
+      --allow the player to move the pole around
+      if drawback == 0 then
+        if love.keyboard.isDown("left") and polex > 20 then
+          polex = polex - 2
+        elseif love.keyboard.isDown("right") and polex < windowWidth - 20 then
+          polex = polex + 2
         end
-        if drawback <= 0 then
-          up = true
-          drawback = 0 
-        end
-        
-    elseif love.keyboard.isDown("space") and castedOut then
-      if bobberX + (bobberSize * bobberScale) < polex + (poleWidth * poleScale) then
-        bobberX = bobberX + 1
-      elseif bobberX + (bobberSize * bobberScale) > polex + (poleWidth * poleScale) then
-        bobberX = bobberX -  1
       end
-      bobberY = bobberY + 1
       
-      if bobberY > windowHeight - 50 then
-        castedOut = false
-        castingCoolDown = 15
-        collectLure:play()
+      --calculate biting chance if casted out
+      if drawback == 0 and castedOut then
+        biteTimer = biteTimer - 0.5
+        if biteTimer <= 0 then
+          biteTimer = 30
+          --if math.random() > 0.8 then
+            underWater = true
+            biteSound:play()
+          --end
+        end
       end
-        reelSound:play()
-    else
-      reelSound:stop()
-    end
     
-    if castingCoolDown > 0 then
-      castingCoolDown = castingCoolDown - 0.1
+      --this is the animation and power logic of drawing back the pole
+      if love.keyboard.isDown("space") and not castedOut and castingCoolDown <= 0 then
+        
+        if drawback < 2 then
+          drawback = drawback + 0.005
+        end
+        if drawback >= 2 then
+          up = false
+          drawback = 2
+        end
+        
+      elseif drawback > 0 and not love.keyboard.isDown("space") and castedOut == false then
+          castedOut = true
+          bobberX = ((polex + (windowWidth/2)) / 2) - ((bobberSize * bobberScale)/2) 
+          bobberY = ((drawback/2) * (levelMax - levelMin)) + levelMin
+          castSound:play()
+          
+      elseif drawback > 0 and castedOut then
+        
+          if drawback > 0 then
+            drawback = drawback - 0.025
+          end
+          if drawback <= 0 then
+            up = true
+            drawback = 0 
+          end
+          
+      elseif love.keyboard.isDown("space") and castedOut then
+        if bobberX + (bobberSize * bobberScale) < polex + (poleWidth * poleScale) then
+          bobberX = bobberX + 1
+        elseif bobberX + (bobberSize * bobberScale) > polex + (poleWidth * poleScale) then
+          bobberX = bobberX -  1
+        end
+        bobberY = bobberY + 1
+        
+        if bobberY > windowHeight - 50 then
+          castedOut = false
+          castingCoolDown = 15
+          collectLure:play()
+        end
+          reelSound:play()
+      else
+        reelSound:stop()
+      end
+      
+      if castingCoolDown > 0 then
+        castingCoolDown = castingCoolDown - 0.1
+      end
     end
 end
