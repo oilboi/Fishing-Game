@@ -41,6 +41,13 @@ function love.load()
     level = love.graphics.newImage("Ocean.png")
     pole = love.graphics.newImage("Pole.png")
     bobber = love.graphics.newImage("Bobber.png")
+    
+    castSound = love.audio.newSource("cast.mp3", "static")
+    music = love.audio.newSource("music.mp3", "stream")
+    
+    reelSound = love.audio.newSource("reel.wav", "static")
+    
+    music:play()
 end
 
 function love.draw()
@@ -101,6 +108,7 @@ function love.update()
         castedOut = true
         bobberX = ((polex + (windowWidth/2)) / 2) - ((bobberSize * bobberScale)/2) 
         bobberY = ((drawback/2) * (levelMax - levelMin)) + levelMin
+        castSound:play()
         
     elseif drawback > 0 and castedOut then
       
@@ -119,10 +127,16 @@ function love.update()
         bobberX = bobberX -  1
       end
       bobberY = bobberY + 1
+      
       if bobberY > windowHeight - 50 then
         castedOut = false
         castingCoolDown = 15
       end
+      
+        reelSound:play()
+      
+    else
+      reelSound:stop()
     end
     
     if castingCoolDown > 0 then
